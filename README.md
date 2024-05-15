@@ -7,7 +7,7 @@
 
 
 <p float="center">
-  <img src="https://vcai.mpi-inf.mpg.de/projects/ConvoFusion/images/TEASER.png" width="800" />
+  <img src="https://vcai.mpi-inf.mpg.de/projects/ConvoFusion/images/TEASER.png" />
 </p>
 
 ## 🚩 Updates
