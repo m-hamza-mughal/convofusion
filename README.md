@@ -64,7 +64,7 @@ add demo script
 
 ## Train your own models
 
-<details>
+<!-- <details> -->
   <summary><b>Training guidance</b></summary>
 
 ### 1. Prepare the datasets
@@ -114,7 +114,7 @@ python visualize.py --src_dir /path/to/results/folder/
 
 We provide scripts for quantitative evaluation in `quant_eval` folder for both monadic and dyadic tasks. These scripts require the generated results folder containing predicted and GT npy motion files.
 
-</details>
+<!-- </details> -->
 
 
 ## Citation
