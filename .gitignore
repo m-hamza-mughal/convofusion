@@ -1,0 +1,13 @@
+__pycache__/
+
+results/*
+
+experiments/*/*
+
+datasets/*/*
+
+*.out
+
+.vscode/
+
+.DS_Store
