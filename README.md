@@ -1,10 +1,8 @@
-# ConvoFusion
-
-
-### [ConvoFusion: Multi-Modal Conversational Diffusion for Co-Speech Gesture Synthesis](https://vcai.mpi-inf.mpg.de/projects/ConvoFusion/)
+# ConvoFusion: Multi-Modal Conversational Diffusion for Co-Speech Gesture Synthesis
 
 ### [Project Page](https://vcai.mpi-inf.mpg.de/projects/ConvoFusion/) | [Arxiv](https://arxiv.org/abs/2403.17936) - CVPR 2024
 
+This repostory contains code and data instructions for ConvoFusion project. In case of questions, create a github issue or email mmughal@mpi-inf.mpg.de
 
 <p float="center">
   <img src="misc/TEASER.png" />
