@@ -70,7 +70,7 @@ add demo script
 ### 1. Prepare the datasets
 
 Setup [BEAT](https://pantomatrix.github.io/BEAT/) and [DnD Group Gesture Dataset](https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.IPFYCC).
-Instructions on processing data (BVH to joint conversions).
+Instructions on processing data (BVH to joint conversions) will be added soon.
 
 ### 2.1. Train VAE model
 
