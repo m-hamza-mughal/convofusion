@@ -132,7 +132,7 @@ year={2024}
 
 This repository is based on the awesome [MLD repository](https://github.com/ChenFengYe/motion-latent-diffusion). Please check out their repository for further acknowledgements of code which they use. We would also like acknowledge the authors of [BEAT](https://pantomatrix.github.io/BEAT/), [Attend-and-Excite](https://yuval-alaluf.github.io/Attend-and-Excite/), [HumanML3D](https://github.com/EricGuo5513/HumanML3D), [PhysCap](https://vcai.mpi-inf.mpg.de/projects/PhysCap/) & [MoFusion](https://vcai.mpi-inf.mpg.de/projects/MoFusion/) since our code is also based on them.
 <br>
-This work was supported by the ERC Consolidator Grant 4DReply (770784). We also thank Andrea Boscolo Camiletto & Heming Zhu for help with rendering and visualizations, Christopher Hyek for designing the game for the dataset and Wolfram Wagner (MPII IST) for help in setting up the equipment
+This work was supported by the ERC Consolidator Grant 4DReply (770784). We also thank Andrea Boscolo Camiletto & Heming Zhu for help with rendering and visualizations, Christopher Hyek for designing the game for the dataset and Wolfram Wagner (MPII IST) for his help in setting the equipment up.
 
 ## License
 
