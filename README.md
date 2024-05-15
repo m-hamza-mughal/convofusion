@@ -38,7 +38,7 @@ Install the packages in `requirements.txt` and install [PyTorch 2.1.2](https://p
 pip install -r requirements.txt
 ```
 
-Download 
+<!-- Download  -->
 
 <!-- ```
 python -m spacy download en_core_web_sm
