@@ -20,12 +20,6 @@ This repostory contains code and data instructions for ConvoFusion project. In c
 ### 1. Conda environment
 
 ```
-conda env create --name convofusion --file=environment.yml 
-```
-
-#### OR
-
-```
 conda create python=3.9 --name convofusion
 conda activate convofusion
 ```
@@ -36,6 +30,12 @@ Install the packages in `requirements.txt` and install [PyTorch 2.1.2](https://p
 pip install -r requirements.txt
 ```
 
+#### OR
+
+```
+conda env create --name convofusion --file=environment.yml 
+```
+
 <!-- Download  -->
 
 <!-- ```
@@ -44,11 +44,17 @@ python -m spacy download en_core_web_sm
 
 ### 2. Dependencies
 
-Will add more instructions on how to download dependencies for training. 
+Follow the steps in [DATASET.md](datasets/DATASETS.md) if you want to run inference on pre-trained model.
+
 
 ### 3. Pre-train model
 
-Download model folders from [this link](https://nextcloud.mpi-klsb.mpg.de/index.php/s/PWnL4HA3wQ7nJnZ), extract zip file and place both folders in `experiments/convofusion/`
+Download model folders from [this link](https://nextcloud.mpi-klsb.mpg.de/index.php/s/PWnL4HA3wQ7nJnZ), 
+extract zip file and place both folders in `experiments/convofusion/`
+<br>
+The zip file contains folders for VAE model and the Gesture Diffusion Model.
+
+For evaluation, download FID network [from here]() and place in `experiments/eval`
 
 <!-- </details> -->
 
@@ -57,7 +63,7 @@ Download model folders from [this link](https://nextcloud.mpi-klsb.mpg.de/index.
 <!-- <details>
   <summary><b>Gesture Generation</b></summary>
 
-add demo script
+TODO: add demo script
 </details> -->
 
 ## Train your own models
@@ -68,7 +74,7 @@ add demo script
 ### 1. Prepare the datasets
 
 Setup [BEAT](https://pantomatrix.github.io/BEAT/) and [DnD Group Gesture Dataset](https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.IPFYCC).
-Instructions on processing data (BVH to joint conversions) will be added soon.
+Follow the steps in [DATASET.md](datasets/DATASETS.md)
 
 ### 2.1. Train VAE model
 

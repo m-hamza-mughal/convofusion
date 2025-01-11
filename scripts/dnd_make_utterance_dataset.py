@@ -1,34 +1,3 @@
-"""
-combine hand and body csvs for each session
-make session folders with audios and joint csvs
-
---- 
-read session
-    - read all motion csvs
-    - read all audios 
-    - extract persons from id of motion csvs
-
-    for each person
-    - read csv
-    -- reshape feats
-    -- add reorder joints
-    -- 
-    - read audio (resample)
-    - divide based on utterance and get timestamps
-    - for each utterance based on audio/timestamps (while loop until count == length of utterance start from count 0)
-    -- discard if length is less than 3.5 second and continue
-    -- split if length is more than 5 second and add to utterances and continue
-    -- make folder based on sessid and personid and utteranceid
-    -- get motion_spk start from audio start and end at start + max len
-    -- get motion_lsn1, motion_lsn2, motion_lsn3,  motion_lsn4
-
-    -- take audio_spk start from audio start and end at start + max len
-    -- take audio_lsn1, audio_lsn2, audio_lsn3, audio_lsn4
-
-    -- transcribe audios to text
-    -- increase count
-"""
-
 import os
 import sys
 import glob
@@ -120,19 +89,18 @@ def transcribe(audio):
     segments = [(x["start"], x["end"], x["text"]) for x in result["segments"]]
     return result["text"], segments
 
-def process_session(session_path, output_folder):
+def process_session(session_path, output_folder, num_frames=128):
     logging.info(os.path.basename(session_path))
 
     start_motion_frame = {
-            "joints_24_10_22": 185,
-            "joints_28_10_22": 166,
-            "joints_03_02_23": 88,
-            "joints_03_02_23_nonverbalremoved": 88,
-            "joints_24_02_23": 0,
+            "session_1": 185,
+            "session_2": 166,
+            "session_3": 88,
+            "session_4": 0, # 130
         }
 
-    max_audio_len = int(((128 * 6)/25) * 1000) # 128 frames at 25 fps
-    max_motion_len = 128 * 6# 128 frames at 25 fps
+    max_audio_len = int(((num_frames)/25) * 1000) # 128 frames at 25 fps = 5.12 seconds
+    max_motion_len = num_frames # 128 frames at 25 fps = 5.12 seconds
 
     # make session output folder
     session_name = os.path.basename(session_path)
@@ -351,15 +319,18 @@ def process_session(session_path, output_folder):
             # prev_end = end
             
 
-def process_utterance(session_path, person_id, utterance_id, audio_path, motion_path):
-    pass
-
 
 
 if __name__ == "__main__":
     logging.info(msg="Starting to process sessions")
-    session_parent_folder = '/CT/GroupGesture/work/DnD_first_three_recordings/joint_pos/joint_csv/final/'
+    session_parent_folder = './datasets/DnD_processed_jointpos/'
     session_folders = glob.glob(os.path.join(session_parent_folder, '*'))
-    session_folders = ['/CT/GroupGesture/work/DnD_first_three_recordings/joint_pos/joint_csv/final/joints_28_10_22']
+
     for session_folder in session_folders:
-        process_session(session_path=session_folder, output_folder='/CT/GroupGesture/work/GestureSynth/ut_data_30sec')
+        process_session(
+            session_path=session_folder, 
+            output_folder='./datasets/utterance_dataset_5sec',
+            # num_frames=128*6 # uncomment to make 30 seconds long chunks
+            )
+
+

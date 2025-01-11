@@ -10,7 +10,7 @@ def transcribe(model, audio_path):
 
 def main(src_dir, 
          out_dir):
-    model = whisper.load_model("medium.en", download_root='/CT/mmughal/work/GestureSynth/whisper_ASR/model_cache/')
+    model = whisper.load_model("medium.en")
 
     audio_files = glob.glob(os.path.join(src_dir, "*/*.wav"))
     for audio_path in tqdm(audio_files):
@@ -26,8 +26,9 @@ def main(src_dir,
         
 
 if __name__ == "__main__":
-    src_dir = "/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/"
-    out_dir = "/CT/mmughal/work/GestureSynth/BEAT/datasets/whisper_transcription/"
+    src_dir = "datasets/beat_english_v0.2.1/"
+    out_dir = "datasets/beat_english_v0.2.1/whisper_transcription/"
+    os.makedirs(out_dir, exist_ok=True)
 
     main(src_dir, out_dir)
     
