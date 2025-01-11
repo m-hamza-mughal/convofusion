@@ -33,7 +33,7 @@ TRAIN:
   
 
   RESUME: '' # Resume training from this path
-  PRETRAINED_VAE: '/CT/GroupGesture/work/GestureSynth/reaction-latent-diffusion/experiments/mld/beatdnd_joints_vae_lat2x128_len128_lkl_handsc_timechunk8_rootposfix_rb_bonelenlossonlyframes2_wristnormchange/checkpoints/epoch=989.ckpt' # vae model path
+  PRETRAINED_VAE: './experiments/mld/beatdnd_joints_vae_lat2x128_len128_lkl_handsc_timechunk8_rootposfix_rb_bonelenlossonlyframes2_wristnormchange/checkpoints/epoch=989.ckpt' # vae model path
   OPTIM:
     TYPE: AdamW # Optimizer type
     LR: 7e-5 # Learning rate

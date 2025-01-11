@@ -59,11 +59,8 @@ class T5TextEncoder(nn.Module):
         return text_emb, mask, token2word_map
 
     def get_cache_or_embedding(self, texts: List[str]):
-        # hashed_texts = [str(hash(text)) + '.pt' for text in texts]
-        # if hashed_texts in cache directory then load from there else encode from get last hidden state
-        # return encoded text and mask
-        # breakpoint()
-        cache_dir = '/CT/mmughal/nobackup/GestureSynth/t5_text_cache/'
+        # define cache directory according to your setup
+        cache_dir = './experiments/t5_text_cache/'
         encodings = []
         for text in texts:
             _hash = str(hash(text)) + '.pt'
@@ -113,6 +110,6 @@ class T5TextEncoder(nn.Module):
 
 
 if __name__ == "__main__":
-    model = MLDTextEncoder(modelpath='t5-base')
+    model = T5TextEncoder(modelpath='t5-base')
     
     a = model(['hello', 'world'])

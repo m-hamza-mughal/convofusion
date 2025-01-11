@@ -17,6 +17,7 @@ import argparse
 from tqdm import tqdm
 import torch
 
+
 class FIDCalculator(object):
     @staticmethod
     def frechet_distance(samples_A, samples_B):
@@ -25,16 +26,18 @@ class FIDCalculator(object):
         B_mu = np.mean(samples_B, axis=0)
         B_sigma = np.cov(samples_B, rowvar=False)
         try:
-            frechet_dist = FIDCalculator.calculate_frechet_distance(A_mu, A_sigma, B_mu, B_sigma)
+            frechet_dist = FIDCalculator.calculate_frechet_distance(
+                A_mu, A_sigma, B_mu, B_sigma
+            )
         except ValueError:
-            frechet_dist = 1e+10
+            frechet_dist = 1e10
         return frechet_dist
-
 
     @staticmethod
     def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
-        """ from https://github.com/mseitzer/pytorch-fid/blob/master/fid_score.py """
-        """Numpy implementation of the Frechet Distance.
+        """from https://github.com/mseitzer/pytorch-fid/blob/master/fid_score.py
+
+        Numpy implementation of the Frechet Distance.
         The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1)
         and X_2 ~ N(mu_2, C_2) is
                 d^2 = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)).
@@ -58,18 +61,19 @@ class FIDCalculator(object):
         sigma1 = np.atleast_2d(sigma1)
         sigma2 = np.atleast_2d(sigma2)
 
-        assert mu1.shape == mu2.shape, \
-            'Training and test mean vectors have different lengths'
-        assert sigma1.shape == sigma2.shape, \
-            'Training and test covariances have different dimensions'
+        assert (
+            mu1.shape == mu2.shape
+        ), "Training and test mean vectors have different lengths"
+        assert (
+            sigma1.shape == sigma2.shape
+        ), "Training and test covariances have different dimensions"
 
         diff = mu1 - mu2
 
         # Product might be almost singular
         covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
         if not np.isfinite(covmean).all():
-            msg = ('fid calculation produces singular product; '
-                    'adding %s to diagonal of cov estimates') % eps
+            msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
             print(msg)
             offset = np.eye(sigma1.shape[0]) * eps
             covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -78,32 +82,36 @@ class FIDCalculator(object):
         if np.iscomplexobj(covmean):
             if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
                 m = np.max(np.abs(covmean.imag))
-                raise ValueError('Imaginary component {}'.format(m))
+                raise ValueError("Imaginary component {}".format(m))
             covmean = covmean.real
 
         tr_covmean = np.trace(covmean)
 
-        return (diff.dot(diff) + np.trace(sigma1) +
-                np.trace(sigma2) - 2 * tr_covmean)
+        return diff.dot(diff) + np.trace(sigma1) + np.trace(sigma2) - 2 * tr_covmean
 
 
-class alignment(object):
+class Alignment(object):
+    """Class to calculate alignment between audio and pose data"""
+
     def __init__(self, sigma, order):
         self.sigma = sigma
         self.order = order
         self.times = self.oenv = self.S = self.rms = None
         self.pose_data = []
-    
+
     def load_audio(self, wave, t_start, t_end, without_file=False, sr_audio=16000):
         if without_file:
             y = wave
             sr = sr_audio
-        else: y, sr = librosa.load(wave, sr=sr_audio)
-        short_y = y #[int(t_start*sr):int(t_end*sr)]
+        else:
+            y, sr = librosa.load(wave, sr=sr_audio)
+        short_y = y  # [int(t_start*sr):int(t_end*sr)]
         self.oenv = librosa.onset.onset_strength(y=short_y, sr=sr)
         self.times = librosa.times_like(self.oenv)
         # Detect events without backtracking
-        onset_raw = librosa.onset.onset_detect(onset_envelope=self.oenv, backtrack=False)
+        onset_raw = librosa.onset.onset_detect(
+            onset_envelope=self.oenv, backtrack=False
+        )
         if len(onset_raw) == 0:
             # print(len(wave))
             return None, None, None
@@ -114,82 +122,143 @@ class alignment(object):
         return onset_raw, onset_bt, onset_bt_rms
 
     def load_pose(self, pose, t_start, t_end, pose_fps, without_file=False):
-        # data_each_file = []
-        # if without_file:
-        #     for line_data_np in pose: #,args.pre_frames, args.pose_length
-        #         data_each_file.append(np.concatenate([line_data_np[30:39], line_data_np[112:121], ],0))
-        # else: 
-        #     with open(pose, "r") as f:
-        #         for i, line_data in enumerate(f.readlines()):
-        #             if i < 432: continue
-        #             line_data_np = np.fromstring(line_data, sep=" ",)
-        #             if pose_fps == 15:
-        #                 if i % 2 == 0:
-        #                     continue
-        #             data_each_file.append(np.concatenate([line_data_np[30:39], line_data_np[112:121], ],0))
-        # data_each_file = np.array(data_each_file)
+        
 
-        data_each_file = pose #.reshape(-1, 189//3, 3)
-        vel= data_each_file[1:, :] - data_each_file[:-1, :]
-        # l1 
-        # vel_rigth_shoulder = abs(vel[:, 0]) + abs(vel[:, 1]) + abs(vel[:, 2])
-        # vel_rigth_arm = abs(vel[:, 3]) + abs(vel[:, 4]) + abs(vel[:, 5])
-        # vel_rigth_wrist = abs(vel[:, 6]) + abs(vel[:, 7]) + abs(vel[:, 8])
+        data_each_file = pose  # .reshape(-1, 189//3, 3)
+        vel = data_each_file[1:, :] - data_each_file[:-1, :]
+        
         # l2
         # breakpoint()
-        vel_right_shoulder = np.linalg.norm(np.array([vel[:, 9*3], vel[:, 9*3 + 1], vel[:, 9*3 + 2]]), axis=0)
-        vel_right_arm = np.linalg.norm(np.array([vel[:, 10*3], vel[:, 10*3 + 1], vel[:, 10*3 + 2]]), axis=0)
-        vel_right_wrist = np.linalg.norm(np.array([vel[:, 11*3], vel[:, 11*3 + 1], vel[:, 11*3 + 2]]), axis=0)
+        vel_right_shoulder = np.linalg.norm(
+            np.array([vel[:, 9 * 3], vel[:, 9 * 3 + 1], vel[:, 9 * 3 + 2]]), axis=0
+        )
+        vel_right_arm = np.linalg.norm(
+            np.array([vel[:, 10 * 3], vel[:, 10 * 3 + 1], vel[:, 10 * 3 + 2]]), axis=0
+        )
+        vel_right_wrist = np.linalg.norm(
+            np.array([vel[:, 11 * 3], vel[:, 11 * 3 + 1], vel[:, 11 * 3 + 2]]), axis=0
+        )
         beat_right_arm = argrelextrema(vel_right_arm, np.less, order=self.order)
-        beat_right_shoulder = argrelextrema(vel_right_shoulder, np.less, order=self.order)
+        beat_right_shoulder = argrelextrema(
+            vel_right_shoulder, np.less, order=self.order
+        )
         beat_right_wrist = argrelextrema(vel_right_wrist, np.less, order=self.order)
-        vel_left_shoulder = np.linalg.norm(np.array([vel[:, 5*3], vel[:, 5*3 + 1], vel[:, 5*3 + 2]]), axis=0)
-        vel_left_arm = np.linalg.norm(np.array([vel[:, 6*3], vel[:, 6*3 + 1], vel[:, 6*3 + 2]]), axis=0)
-        vel_left_wrist = np.linalg.norm(np.array([vel[:, 7*3], vel[:, 7*3 + 1], vel[:, 7*3 + 2]]), axis=0)
+        vel_left_shoulder = np.linalg.norm(
+            np.array([vel[:, 5 * 3], vel[:, 5 * 3 + 1], vel[:, 5 * 3 + 2]]), axis=0
+        )
+        vel_left_arm = np.linalg.norm(
+            np.array([vel[:, 6 * 3], vel[:, 6 * 3 + 1], vel[:, 6 * 3 + 2]]), axis=0
+        )
+        vel_left_wrist = np.linalg.norm(
+            np.array([vel[:, 7 * 3], vel[:, 7 * 3 + 1], vel[:, 7 * 3 + 2]]), axis=0
+        )
         beat_left_arm = argrelextrema(vel_left_arm, np.less, order=self.order)
         beat_left_shoulder = argrelextrema(vel_left_shoulder, np.less, order=self.order)
         beat_left_wrist = argrelextrema(vel_left_wrist, np.less, order=self.order)
-        return beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist
-    
+        return (
+            beat_right_arm,
+            beat_right_shoulder,
+            beat_right_wrist,
+            beat_left_arm,
+            beat_left_shoulder,
+            beat_left_wrist,
+        )
+
     def load_data(self, wave, pose, t_start, t_end, pose_fps):
         onset_raw, onset_bt, onset_bt_rms = self.load_audio(wave, t_start, t_end)
-        beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist = self.load_pose(pose, t_start, t_end, pose_fps)
-        return onset_raw, onset_bt, onset_bt_rms, beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist 
+        (
+            beat_right_arm,
+            beat_right_shoulder,
+            beat_right_wrist,
+            beat_left_arm,
+            beat_left_shoulder,
+            beat_left_wrist,
+        ) = self.load_pose(pose, t_start, t_end, pose_fps)
+        return (
+            onset_raw,
+            onset_bt,
+            onset_bt_rms,
+            beat_right_arm,
+            beat_right_shoulder,
+            beat_right_wrist,
+            beat_left_arm,
+            beat_left_shoulder,
+            beat_left_wrist,
+        )
 
     def eval_random_pose(self, wave, pose, t_start, t_end, pose_fps, num_random=60):
         onset_raw, onset_bt, onset_bt_rms = self.load_audio(wave, t_start, t_end)
         dur = t_end - t_start
         for i in range(num_random):
-            beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist = self.load_pose(pose, i, i+dur, pose_fps)
-            dis_all_b2a= self.calculate_align(onset_raw, onset_bt, onset_bt_rms, beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist)
-            print(f"{i}s: ",dis_all_b2a)
+            (
+                beat_right_arm,
+                beat_right_shoulder,
+                beat_right_wrist,
+                beat_left_arm,
+                beat_left_shoulder,
+                beat_left_wrist,
+            ) = self.load_pose(pose, i, i + dur, pose_fps)
+            dis_all_b2a = self.calculate_align(
+                onset_raw,
+                onset_bt,
+                onset_bt_rms,
+                beat_right_arm,
+                beat_right_shoulder,
+                beat_right_wrist,
+                beat_left_arm,
+                beat_left_shoulder,
+                beat_left_wrist,
+            )
+            print(f"{i}s: ", dis_all_b2a)
 
     def audio_beat_vis(self, onset_raw, onset_bt, onset_bt_rms):
         figure(figsize=(24, 6), dpi=80)
         fig, ax = plt.subplots(nrows=4, sharex=True)
-        librosa.display.specshow(librosa.amplitude_to_db(self.S, ref=np.max),
-                                y_axis='log', x_axis='time', ax=ax[0])
+        librosa.display.specshow(
+            librosa.amplitude_to_db(self.S, ref=np.max),
+            y_axis="log",
+            x_axis="time",
+            ax=ax[0],
+        )
         ax[0].label_outer()
-        ax[1].plot(self.times, self.oenv, label='Onset strength')
-        ax[1].vlines(librosa.frames_to_time(onset_raw), 0, self.oenv.max(), label='Raw onsets', color='r')
+        ax[1].plot(self.times, self.oenv, label="Onset strength")
+        ax[1].vlines(
+            librosa.frames_to_time(onset_raw),
+            0,
+            self.oenv.max(),
+            label="Raw onsets",
+            color="r",
+        )
         ax[1].legend()
         ax[1].label_outer()
 
-        ax[2].plot(self.times, self.oenv, label='Onset strength')
-        ax[2].vlines(librosa.frames_to_time(onset_bt), 0, self.oenv.max(), label='Backtracked', color='r')
+        ax[2].plot(self.times, self.oenv, label="Onset strength")
+        ax[2].vlines(
+            librosa.frames_to_time(onset_bt),
+            0,
+            self.oenv.max(),
+            label="Backtracked",
+            color="r",
+        )
         ax[2].legend()
         ax[2].label_outer()
 
-        ax[3].plot(self.times, self.rms[0], label='RMS')
-        ax[3].vlines(librosa.frames_to_time(onset_bt_rms), 0, self.oenv.max(), label='Backtracked (RMS)', color='r')
+        ax[3].plot(self.times, self.rms[0], label="RMS")
+        ax[3].vlines(
+            librosa.frames_to_time(onset_bt_rms),
+            0,
+            self.oenv.max(),
+            label="Backtracked (RMS)",
+            color="r",
+        )
         ax[3].legend()
         fig.savefig("./onset.png", dpi=500)
-    
+
     @staticmethod
     def motion_frames2time(vel, offset, pose_fps):
-        time_vel = vel[0]/pose_fps + offset 
-        return time_vel    
-    
+        time_vel = vel[0] / pose_fps + offset
+        return time_vel
+
     @staticmethod
     def GAHR(a, b, sigma):
         dis_all_a2b = 0
@@ -200,33 +269,36 @@ class alignment(object):
                 l2_dis = abs(a_each - b_each)
                 if l2_dis < l2_min:
                     l2_min = l2_dis
-            dis_all_b2a += math.exp(-(l2_min**2)/(2*sigma**2))
+            dis_all_b2a += math.exp(-(l2_min**2) / (2 * sigma**2))
         dis_all_b2a /= len(b)
-        return dis_all_b2a 
+        return dis_all_b2a
 
-    def calculate_align(self, onset_raw, onset_bt, onset_bt_rms, beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist, pose_fps=25):
-        # more stable solution
-        # avg_dis_all_b2a = 0
-        # for audio_beat in [onset_raw, onset_bt, onset_bt_rms]:
-        #     for pose_beat in [beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist]:
-        #         audio_bt = librosa.frames_to_time(audio_beat)
-        #         pose_bt = self.motion_frames2time(pose_beat, 0, pose_fps)
-        #         dis_all_b2a = self.GAHR(pose_bt, audio_bt, self.sigma)
-        #         avg_dis_all_b2a += dis_all_b2a
-        # avg_dis_all_b2a /= 18
-        # breakpoint()
+    def calculate_align(
+        self,
+        onset_raw,
+        onset_bt,
+        onset_bt_rms,
+        beat_right_arm,
+        beat_right_shoulder,
+        beat_right_wrist,
+        beat_left_arm,
+        beat_left_shoulder,
+        beat_left_wrist,
+        pose_fps=25,
+    ):
         audio_bt = librosa.frames_to_time(onset_bt_rms)
         pose_bt = self.motion_frames2time(beat_right_wrist, 0, pose_fps)
         # avg_dis_all_b2a = self.GAHR(audio_bt, pose_bt, self.sigma)
         avg_dis_all_b2a = self.GAHR(pose_bt, audio_bt, self.sigma)
-        return avg_dis_all_b2a  
+        return avg_dis_all_b2a
 
 
 def calc_diversity(feats):
     feat_array = np.array(feats)
     n, c = feat_array.shape
     diff = np.array([feat_array] * n) - feat_array.reshape(n, 1, c)
-    return np.sqrt(np.sum(diff**2, axis=2)).sum() / n / (n-1)
+    return np.sqrt(np.sum(diff**2, axis=2)).sum() / n / (n - 1)
+
 
 def calculate_avg_distance(feature_list, mean=None, std=None):
     feature_list = np.stack(feature_list)
@@ -248,29 +320,30 @@ class SRGR(object):
         self.pose_dimes = joints
         self.counter = 0
         self.sum = 0
-        
+
     def run(self, results, targets, semantic):
         results = results.reshape(-1, self.pose_dimes, 3)
         targets = targets.reshape(-1, self.pose_dimes, 3)
         semantic = semantic.reshape(-1)
-        diff = np.sum(abs(results-targets),2)
-        success = np.where(diff<self.threshold, 1.0, 0.0)
+        diff = np.sum(abs(results - targets), 2)
+        success = np.where(diff < self.threshold, 1.0, 0.0)
         for i in range(success.shape[0]):
             # srgr == 0.165 when all success, scale range to [0, 1]
-            success[i, :] *= semantic[i] * (1/0.165) 
-        rate = np.sum(success)/(success.shape[0]*success.shape[1])
+            success[i, :] *= semantic[i] * (1 / 0.165)
+        rate = np.sum(success) / (success.shape[0] * success.shape[1])
         self.counter += success.shape[0]
-        self.sum += (rate*success.shape[0])
+        self.sum += rate * success.shape[0]
         return rate
-    
+
     def avg(self):
-        return self.sum/self.counter
+        return self.sum / self.counter
 
 
 class L1div(object):
     def __init__(self):
         self.counter = 0
         self.sum = 0
+
     def run(self, results):
         self.counter += results.shape[0]
         mean = np.mean(results, 0)
@@ -278,27 +351,29 @@ class L1div(object):
             results[i, :] = abs(results[i, :] - mean)
         sum_l1 = np.sum(results)
         self.sum += sum_l1
+
     def avg(self):
-        return self.sum/self.counter
-    
-def load_fidnet_checkpoints(model, save_path, load_name='model'):
+        return self.sum / self.counter
+
+
+def load_fidnet_checkpoints(model, save_path, load_name="model"):
     states = torch.load(save_path)
     new_weights = OrderedDict()
-    flag=False
-    for k, v in states['model_state'].items():
+    flag = False
+    for k, v in states["model_state"].items():
         if "module" not in k:
             break
         else:
-            new_weights[k[7:]]=v
-            flag=True
-    if flag: 
+            new_weights[k[7:]] = v
+            flag = True
+    if flag:
         model.load_state_dict(new_weights)
     else:
-        model.load_state_dict(states['model_state'])
+        model.load_state_dict(states["model_state"])
     print(f"load self-pretrained checkpoints for {load_name}")
 
 
-def process_motion( motion):
+def process_motion(motion):
     # breakpoint()
     #  Put on floor
     floor_height = motion.min(axis=0).min(axis=0)[1]
@@ -314,12 +389,14 @@ def process_motion( motion):
     across1 = root_pos_init[r_hip] - root_pos_init[l_hip]
     across2 = root_pos_init[sdr_r] - root_pos_init[sdr_l]
     across = across1 + across2
-    across = across / np.sqrt((across ** 2).sum(axis=-1))[..., np.newaxis]
+    across = across / np.sqrt((across**2).sum(axis=-1))[..., np.newaxis]
 
     # forward (3,), rotate around y-axis
     forward_init = np.cross(np.array([[0, 1, 0]]), across, axis=-1)
     # forward (3,)
-    forward_init = forward_init / np.sqrt((forward_init ** 2).sum(axis=-1))[..., np.newaxis]
+    forward_init = (
+        forward_init / np.sqrt((forward_init**2).sum(axis=-1))[..., np.newaxis]
+    )
 
     #     print(forward_init)
 
@@ -332,7 +409,7 @@ def process_motion( motion):
     motion = qrot_np(root_quat_init, motion)
 
     # all joints root relative
-    motion[:, 1:, :] = motion[:, 1:, :] - motion[:, :1, :] 
+    motion[:, 1:, :] = motion[:, 1:, :] - motion[:, :1, :]
 
     # hands relative to wrist
     motion[:, 23:43, :] = motion[:, 23:43, :] - motion[:, [7], :]
@@ -346,33 +423,36 @@ def process_motion( motion):
 
 def smoothing(joints):
     """
-        joints: Tx24x3
+    joints: Tx24x3
     """
-    for i in range(5, joints.shape[0]-5):
+    for i in range(5, joints.shape[0] - 5):
         # breakpoint()
-        filt =  joints[i-5:i+5, :, :]
+        filt = joints[i - 5 : i + 5, :, :]
         # print(len(filt))
-        joints[i] = np.average(filt, axis=0, weights=[0.5]*10)
+        joints[i] = np.average(filt, axis=0, weights=[0.5] * 10)
         joints[i] = filt.mean(axis=0)
     return joints
-    
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--result_dir", type=str, required=True, help="directory containing the results")
+    parser.add_argument(
+        "--result_dir", type=str, required=True, help="directory containing the results"
+    )
     args = parser.parse_args()
     result_dir = args.result_dir
 
-    ae_path =  '/CT/mmughal/work/GestureSynth/BEAT/outputs/audio2pose/custom/1106_124514_ae_beatdnd_35english_25_189/last_499.bin'
+    ae_path = "./experiments/eval/last_499.bin"
     FIDNet = HalfEmbeddingNet(pose_length=128, pose_dim=189, feature_length=300)
-    load_fidnet_checkpoints(FIDNet, ae_path, 'HalfEmbeddingNet')
+    load_fidnet_checkpoints(FIDNet, ae_path, "HalfEmbeddingNet")
     FIDNet.cuda()
     FIDNet.eval()
 
-    alignmenter = alignment(sigma=0.3, order=10)
+    alignmenter = Alignment(sigma=0.3, order=10)
     srgr_cal = SRGR(0.3, 63)
     l1_calculator = L1div()
 
-    gt_files = glob.glob(os.path.join(result_dir, '*/*/gt.npy'))
+    gt_files = glob.glob(os.path.join(result_dir, "*/*/gt.npy"))
     gt_files.sort()
     # breakpoint()
 
@@ -384,39 +464,37 @@ if __name__ == '__main__':
     for its, gt_file in tqdm(enumerate(gt_files)):
         # load the npy file
         gt = np.load(gt_file)
-        pred = np.load(gt_file.replace('gt.npy', 'pred.npy'))
-        # 
+        pred = np.load(gt_file.replace("gt.npy", "pred.npy"))
+        #
         # breakpoint()
-        #TEMP
+        # TEMP
         base2_path = result_dir
-        sem_path = '/'.join(gt_file.replace('gt.npy', 'sem_lsn.npy').split('/')[-3:]) # this is path to semantic annotation stored in npy file. 
+        sem_path = "/".join(
+            gt_file.replace("gt.npy", "sem_lsn.npy").split("/")[-3:]
+        )  # this is path to semantic annotation stored in npy file.
         # reshape to posedims
         sem = np.load(os.path.join(base2_path, sem_path))
         # pred = smoothing(pred)
-
 
         gt = gt.reshape(-1, 189)
         pred = pred.reshape(-1, 189)
 
         # load lsn audio file and reshape (-1)
-        audio_file = gt_file.replace('gt.npy', 'lsn_audio.wav')
+        audio_file = gt_file.replace("gt.npy", "lsn_audio.wav")
         audio, sr = librosa.load(audio_file, sr=16000)
         audio = librosa.util.normalize(audio)
         audio = audio.reshape(-1)
 
-
         # get audio pose beats and calculate alignment
-        
-        gt_np = gt.reshape(128, 63, 3).copy() 
+
+        gt_np = gt.reshape(128, 63, 3).copy()
         pred_np = pred.reshape(128, 63, 3).copy()
-        pred_align = pred_np.reshape(-1, 189).copy()    
+        pred_align = pred_np.reshape(-1, 189).copy()
         gt_align = gt_np.reshape(-1, 189).copy()
 
         _ = srgr_cal.run(pred, gt, sem)
 
         _ = l1_calculator.run(pred.copy())
-
-
 
         gt_np = process_motion(gt_np)
         pred_np = process_motion(pred_np)
@@ -425,22 +503,40 @@ if __name__ == '__main__':
             pred_all = pred_np[np.newaxis, :]
             tar_all = gt_np[np.newaxis, :]
         else:
-            pred_all = np.concatenate([pred_all, pred_np[np.newaxis, :] ], axis=0)
-            tar_all = np.concatenate([tar_all, gt_np[np.newaxis, :] ], axis=0)
-
+            pred_all = np.concatenate([pred_all, pred_np[np.newaxis, :]], axis=0)
+            tar_all = np.concatenate([tar_all, gt_np[np.newaxis, :]], axis=0)
 
         # get audio pose beats and calculate alignment
         # onset_raw, onset_bt, onset_bt_rms = alignmenter.load_audio(audio, 0, 128/25, True)
-        onset_raw, onset_bt, onset_bt_rms = alignmenter.load_audio(audio, 0, 128/25, True)
+        onset_raw, onset_bt, onset_bt_rms = alignmenter.load_audio(
+            audio, 0, 128 / 25, True
+        )
         if onset_raw is None:
             print("skipping", gt_file)
             # breakpoint()
             continue
         else:
             counter += 1
-            beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist = alignmenter.load_pose(pred_align, 0, 128/25, 25, True)
-            align += alignmenter.calculate_align(onset_raw, onset_bt, onset_bt_rms, beat_right_arm, beat_right_shoulder, beat_right_wrist, beat_left_arm, beat_left_shoulder, beat_left_wrist, 25)
-    
+            (
+                beat_right_arm,
+                beat_right_shoulder,
+                beat_right_wrist,
+                beat_left_arm,
+                beat_left_shoulder,
+                beat_left_wrist,
+            ) = alignmenter.load_pose(pred_align, 0, 128 / 25, 25, True)
+            align += alignmenter.calculate_align(
+                onset_raw,
+                onset_bt,
+                onset_bt_rms,
+                beat_right_arm,
+                beat_right_shoulder,
+                beat_right_wrist,
+                beat_left_arm,
+                beat_left_shoulder,
+                beat_left_wrist,
+                25,
+            )
 
     print("Alignment:", align / counter)
     print(counter)

@@ -228,7 +228,6 @@ class BEATAugReactionDataset(data.Dataset):
         if self.dataset_select == 'beat':
             self.reaction_set_paths = []
         # breakpoint()
-        # self.reaction_set_paths = [os.path.join(dataset_path, "joints_03_02_23/chris_2195944_2201064")]*32
         
         dnd_names = []
         # id_list = []
@@ -276,13 +275,7 @@ class BEATAugReactionDataset(data.Dataset):
             audio_lsn3 = np.zeros_like(audio_spk) if len(audio_lsn3) == 0 else audio_lsn3
             audio_lsn4 = np.zeros_like(audio_spk) if len(audio_lsn4) == 0 else audio_lsn4
 
-            # try:
-            # breakpoint()
-           
-            # except:
-            #     print(set_path)
-            #     print(audio_spk.shape, audio_lsn1.shape, audio_lsn2.shape, audio_lsn3.shape, audio_lsn4.shape)
-
+            
             # pad audio
             audio_spk, audio_lsn1, audio_lsn2, audio_lsn3, audio_lsn4 = \
                 self.pad_audios([audio_spk, audio_lsn1, audio_lsn2, audio_lsn3, audio_lsn4])
@@ -309,43 +302,7 @@ class BEATAugReactionDataset(data.Dataset):
 
             uncond_sem = -1. * np.ones(self.max_motion_length)
             
-            # uncond_mel = -90 * np.ones_like(melspec_spk)
-            # uncond_mel[..., 40:45] = 0
-            # data_dict['dndspk+' + set_name] = {
-            #         'motion_spk': np.zeros_like(motion_spk),   
-            #         'motions_lsn': [motion_spk],
-            #         'melspec_spk': uncond_mel, 
-            #         'melspecs_lsn': [melspec_spk],
-            #         'text_spk': "-"*10,
-            #         'texts_lsn': [text_spk],
-            #         'audio_spk': np.zeros_like(audio_spk),
-            #         'audios_lsn': [audio_spk],
-            #         'active_passive_bit': [self.check_audio(audio_spk)],
-            #         'sem_lsn': uncond_sem,
-            #     }
-            # # breakpoint()
-            # name_list.append('dndspk+' + set_name)
-            # dnd_names.append('dndspk+' + set_name)
-            # length_list.append(motion_spk.shape[0])
-
-            # if "test" in self.dnd_split_file:
-            #     continue
             
-            # data_dict['dnd+' + set_name] = {
-            #     'motion_spk': motion_spk,   
-            #     'motions_lsn': [motion_lsn1, motion_lsn2, motion_lsn3, motion_lsn4],
-            #     'melspec_spk': melspec_spk,
-            #     'melspecs_lsn': [melspec_lsn1, melspec_lsn2, melspec_lsn3, melspec_lsn4],
-            #     'text_spk': text_spk,
-            #     'texts_lsn': [text_lsn1, text_lsn2, text_lsn3, text_lsn4],
-            #     'audio_spk': audio_spk,
-            #     'audios_lsn': [audio_lsn1, audio_lsn2, audio_lsn3, audio_lsn4],
-            #     'active_passive_bit': active_passive_bit,
-            #     'sem_lsn': uncond_sem,
-            # }
-            # name_list.append('dnd+' + set_name)
-            # dnd_names.append('dnd+' + set_name)
-            # length_list.append(motion_spk.shape[0])
             if True: #self.check_audio(audio_lsn1).sum() != 0:
                 data_dict['dnd+' + set_name + '_l1'] = {
                     'motion_spk': motion_spk,   
@@ -551,13 +508,6 @@ class BEATAugReactionDataset(data.Dataset):
         # breakpoint()
         # apb_list = active_passive_bit
         for audio in audios:
-            # if len(audio) == 0:
-            #     audio = np.zeros_like(audios[0])
-
-            # if (audio == np.zeros_like(audio)).all():
-            #     audio = np.ones_like(audio)
-            # if apb == 0:
-            #     audio = np.zeros_like(audio)
             
             melspec = librosa.feature.melspectrogram(
                 y=audio, sr=self.SR, hop_length=self.HOP_LEN, n_mels=self.N_MELS)
@@ -577,8 +527,6 @@ class BEATAugReactionDataset(data.Dataset):
             # breakpoint()
             motion = motion[:, list(range(0,23)) +  list(range(24,44)) + list(range(46,66)), :] # njoints are 63 - 23 body 20 left and 20 right hands
             motion = motion/1000 # mm to m
-            # reorder joints to make root joint first - already ordered in utterance making script for dnd dataset
-            # motion = motion[:, [3] + list(range(0,3)) + list(range(4, motion.shape[1])) , :] 
 
             #  Put on floor
             floor_height = motion.min(axis=0).min(axis=0)[1]
@@ -690,11 +638,6 @@ class BEATAugReactionDataset(data.Dataset):
 
         # 
         lsn_id = self.speaker_names.index(lsn_name) + 1
-        # print("spk, lsn, lsnid", spk_name, lsn_name, lsn_id)
-        # print("spk_name", spk_name, "lsn_name", lsn_name, lsn_id, lsns, name)
-
-        # for apb in enumerate(active_passive_lsn):
-        #     if apb == 0:
 
         if dataset_name in ['dnd', 'dndspk'] :
             set_path = os.path.join(self.dnd_dataset_path, set_path_name)
@@ -737,10 +680,7 @@ class BEATAugReactionDataset(data.Dataset):
             text_lsn = '' #'-'*10
             # sem_lsn = np.zeros_like(sem_lsn)
 
-        # if text_lsn == '':
-        #     text_lsn = '-'*10 # represents no textual description (needed for discrimination against unconditional case)
-        # if text_spk == '':
-        #     text_spk = '-'*10
+        
         text_lsn = text_lsn.strip()
         text_spk = text_spk.strip()
 
@@ -807,7 +747,6 @@ class MotionDataset(data.Dataset):
         tiny=False,
         **kwargs,
     ):
-        # # self.max_length = 512 # changed from 20 to 256
         # self.stage = kwargs['stage']
         self.motion_rep = motion_rep
         self.njoints = 0
@@ -868,22 +807,16 @@ class MotionDataset(data.Dataset):
             
             f = interp1d(np.arange(len(orig_motion)), orig_motion, axis=0)
             motion = f(xp) # (motion length, 228)
-            # if motion_path == '/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/5/5_stewart_0_3_3_euler.npy':
-            #     print(len(motion))
-            #     breakpoint()
 
             if motion.shape[0] < self.max_motion_length:
                 raise
                 # continue
             # breakpoint()
             assert self.motion_rep == 'pos', 'motion_rep should be pos for BEAT dataset'
-            # motion = motion[:, list(range(0,23)) +  list(range(24,44)) + list(range(46,66)), :] # njoints are 63 - 23 hands 20 left and 20 right hands
-            # motion = motion/100 # cm to m
+            # reorder joints to make root joint first
             motion = motion[:, [3] + list(range(0,3)) + list(range(4, motion.shape[1])) , :] 
             motion = motion * 10 # cm to mm to match with dnd dataset
-            # reorder joints to make root joint first
-            # motion = motion[:, [3] + list(range(0,3)) + list(range(4, motion.shape[1])) , :] 
-
+            
             motion = motion[:motion.shape[0] - motion.shape[0] % self.max_motion_length] # (n_chunks * window_size, dim)
             motion_chunks = np.array_split(motion, motion.shape[0] // self.max_motion_length, axis=0) # (n_chunks, window_size, dim)
             
@@ -893,8 +826,6 @@ class MotionDataset(data.Dataset):
                 data_dict['beat/' + motion_name + '/' + str(idx)] = {
                             "motion": chunk,
                             "length": self.max_motion_length,
-                            # "text_path": motion_path.replace('.npy', '.TextGrid').replace('_euler', ''),
-                            # "audio_path": motion_path.replace('.npy', '.wav').replace('_euler', ''),
                             "start_idx": start_idx
                         }
                 beat_name_list.append('beat/' + motion_name + '/' + str(idx))
@@ -923,9 +854,7 @@ class MotionDataset(data.Dataset):
         self.dnd_split.sort()
         if self.dataset_select == 'beat':
             self.reaction_set_paths = []
-        # breakpoint()
-        # self.reaction_set_paths = [os.path.join(dataset_path, "joints_03_02_23/chris_2195944_2201064")]*32
-
+        
         # print("Loading DnD dataset from {}".format(self.dnd_dataset_path))
         for set_path in tqdm(self.reaction_set_paths):
             set_name = "/".join(set_path.split('/')[-2:])
@@ -952,93 +881,21 @@ class MotionDataset(data.Dataset):
                 data_dict['dnd/' + set_name + '/' + str(idx)] = {
                             "motion": chunk,
                             "length": self.max_motion_length,
-                            # "text_path": motion_path.replace('.npy', '.TextGrid').replace('_euler', ''),
-                            # "audio_path": motion_path.replace('.npy', '.wav').replace('_euler', ''),
                             "start_idx": 0
                         }
                 dnd_name_list.append('dnd/' + set_name + '/' + str(idx))
                 # length_list.append(len(chunk))
         print("Length of loaded data from DnD: %d" % len(dnd_name_list))
 
-        # breakpoint()
-        # start_motion_frame = {
-        #     "joints_24_10_22": 185,
-        #     "joints_28_10_22": 166,
-        #     "joints_03_02_23": 88,
-        #     "joints_24_02_23": 130,
-        # }
-
-        # self.person_paths = glob.glob(os.path.join(dnd_dataset_path, '*/*.csv')) #[:2]
-        # self.person_paths.sort()
-
-        # if debug or tiny:
-        #     self.person_paths = self.person_paths[:1]
-
-
-        # for person_path in tqdm(self.person_paths):
-        #     df = pd.read_csv(person_path, header=None)
-        #     frame_array = df.values[:, 1:].reshape(-1, 67, 3)
-
-        #     session_name = os.path.dirname(person_path).split('/')[-1]
-        #     motion_name = session_name + os.path.basename(person_path).replace('.csv', '')
-        #     # print(session_name, person_path)
-        #     start_idx = start_motion_frame[session_name]
-        #     frame_array = frame_array[start_idx:]
-
-        #     # Resample motion to 25 fps for joints_28_10_22
-        #     if os.path.basename(session_name) == "joints_28_10_22":
-        #         xp = np.arange(0, len(frame_array), 30/25)
-
-        #         if xp[-1] > len(frame_array)-1:
-        #             xp = xp[:-1]
-                
-        #         f = interp1d(np.arange(len(frame_array)), frame_array, axis=0)
-        #         motion = f(xp)
-        #     else:
-        #         motion = frame_array
-
-        #     motion = motion[:, list(range(0,23)) +  list(range(24,44)) + list(range(46,66)), :] # njoints are 63 - 23 hands 20 left and 20 right hands
-        #     motion = motion/1000 # mm to m
-        #     # reorder joints to make root joint first
-        #     motion = motion[:, [3] + list(range(0,3)) + list(range(4, motion.shape[1])) , :] 
-
-        #     motion = motion[:motion.shape[0] - motion.shape[0] % self.max_motion_length] # (n_chunks * window_size, dim)
-        #     motion_chunks = np.array_split(motion, motion.shape[0] // self.max_motion_length, axis=0) # (n_chunks, window_size, dim)
-            
-        #     # Temporary splitting fix for DnD dataset
-        #     if os.path.basename(beat_split_file) == 'train.txt':
-        #         motion_chunks = motion_chunks[:int(len(motion_chunks)*0.8)]
-        #     elif os.path.basename(beat_split_file) == 'val.txt':
-        #         motion_chunks = motion_chunks[int(len(motion_chunks)*0.8):]
-
-            
-        #     # breakpoint()
-        #     for idx, chunk in enumerate(motion_chunks):
-        #         start_idx = idx * self.max_motion_length
-        #         data_dict['dnd+' + motion_name + '+' + str(idx)] = {
-        #                     "motion": chunk,
-        #                     "length": self.max_motion_length,
-        #                     # "text_path": motion_path.replace('.npy', '.TextGrid').replace('_euler', ''),
-        #                     # "audio_path": motion_path.replace('.npy', '.wav').replace('_euler', ''),
-        #                     "start_idx": start_idx
-        #                 }
-        #         name_list.append('dnd+' + motion_name + '+' + str(idx))
-
-        # name_list, length_list = zip(
-        #     *sorted(zip(new_name_list, length_list), key=lambda x: x[1]))
         
-        # self.id_list = id_list
-        # self.length_arr = np.array(length_list)
-        # breakpoint()
         for motion_id, motion_dict in data_dict.items():
             motion = motion_dict['motion']
             # breakpoint()
-            #  Put on floor
+            
             motion = motion[:, list(range(0,23)) +  list(range(24,44)) + list(range(46,66)), :] # njoints are 63 - 23 body 20 left and 20 right hands
             motion = motion/1000
 
-            # reordering done in utterance script and loading script for dnd dataset
-
+            #  Put on floor
             floor_height = motion.min(axis=0).min(axis=0)[1]
             motion[:, :, 1] -= floor_height
 
@@ -1098,22 +955,6 @@ class MotionDataset(data.Dataset):
         data = self.data_dict[self.name_list[idx]]
         motion, m_length, chunk_start = data["motion"], data["length"], data["start_idx"]
         
-        # uncomment below for random chunking
-        # end_idx = random.randint(self.min_motion_length, m_length)
-        # start_idx = random.randint(0, end_idx - self.min_motion_length)
-        # chunk_start += start_idx
-        # motion = motion[start_idx:end_idx]
-        # m_length = end_idx - start_idx
-
-        # print("motion length after first cut", len(motion), m_length, chunk_start, start_idx, end_idx)
-
-        # m_length = (m_length // self.unit_length) * self.unit_length
-        # # print("motion length after unit length stuff", len(motion), m_length, chunk_start, start_idx, end_idx)
-        # s_idx = random.randint(0, len(motion) - m_length)
-        # motion = motion[s_idx:s_idx + m_length]
-        # chunk_start += s_idx
-        # print("motion length after second cut", len(motion), m_length, chunk_start, start_idx, end_idx, s_idx)
-        
         motion = motion.reshape(-1, self.njoints * 3)
 
         # print(motion.shape, m_length, self.name_list[idx])
@@ -1132,161 +973,3 @@ class MotionDataset(data.Dataset):
         # return caption, motion, m_length
 
 
-if __name__ == '__main__':
-    from torch.utils.data import DataLoader
-
-    # dataset = TextAudio2MotionDataset('/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/train.txt',
-    #                                  128,
-    #                                  128, 
-    #                                  'pos', 
-    #                                  1, 
-    #                                  '/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/', 
-    #                                  debug=False,
-    #                                  sample_rate=16000,
-    #                                  hop_length=512,
-    #                                  num_mels=80,
-    #                                  fps=25
-    #                                  )
-    # # breakpoint()
-    # # batch = dataset[0]
-    # bs = 32
-    # dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, num_workers=11, drop_last=False, collate_fn=collate_fn)
-
-    # for i, batch in enumerate(dataloader):
-    #     print(i*bs, '/', len(dataset))
-    #     print("motion shape: ", batch[0].shape)
-    #     print("motion length: ", len(batch[1]))
-    #     print("text data shape: ", len(batch[2]))
-    #     print("audio data shape: ", batch[3].shape)
-    #     print("melspec shape: ", batch[4].shape)
-    #     print("name: ", batch[5])
-    #     print("*"*100)
-
-    # dataset = MotionDataset('/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/val.txt',
-    #                                  128,
-    #                                  128, 
-    #                                  'pos', 
-    #                                  1, 
-    #                                  ['/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/', 
-    #                                     '/CT/GroupGesture/work/DnD_first_three_recordings/joint_pos/joint_csv'],
-    #                                  debug=False,
-    #                                  face_joint_idx = [18, 13, 9, 5]
-    #                                  )
-    # # breakpoint()
-    # # batch = dataset[0]
-    # bs = 32
-    # dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, num_workers=11, drop_last=False, collate_fn=collate_fn)
-
-    # for i, batch in enumerate(dataloader):
-    #     print(i*bs, '/', len(dataset))
-    #     print("motion shape: ", batch[0].shape)
-    #     print("motion length: ", len(batch[1]))
-    #     print("name: ", batch[2])
-    #     print("*"*100)
-
-    #     motion = batch[0].numpy()
-    #     name = batch[2]
-    #     for i, data in enumerate(zip(motion, name)):
-    #         m, n = data
-    #         p_keypoints3d = m.reshape(-1, dataset.njoints, 3)
-    #         p_keypoints3d = p_keypoints3d / 3
-    #         # p_keypoints3d[:, 23:, :] = p_keypoints3d[:, 23:, :] / 10
-    #         p_keypoints3d[:, 43:, :] = p_keypoints3d[:, 43:, :] + p_keypoints3d[:, [12], :]
-    #         p_keypoints3d[:, 23:43, :] = p_keypoints3d[:, 23:43, :] + p_keypoints3d[:, [8], :]
-    #         p_keypoints3d[:, 1:, :] = p_keypoints3d[:, 1:, :] + p_keypoints3d[:, :1, :]
-
-    #         np.save(f'/CT/GroupGesture/work/GestureSynth/reaction-latent-diffusion/results/test/{n}.npy', p_keypoints3d)
-
-    #     break
-
-    dataset = TextAudio2ReactionDataset(
-        '/CT/GroupGesture/work/GestureSynth/test_ut_data/train.txt',
-        128,
-        128,
-        'pos',
-        1,
-        '/CT/GroupGesture/work/GestureSynth/test_ut_data/',
-        debug=True,
-        face_joint_idx = [18, 13, 9, 5],
-        sample_rate=16000,
-        hop_length=512,
-        num_mels=80,
-        fps=25
-    )
-    # breakpoint()
-    # batch = dataset[0]
-    bs = 32
-    # dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, num_workers=11, drop_last=False, collate_fn=collate_fn)
-
-    # sum_ = 0
-    # sum2 = 0
-    # sum3 = 0
-    # sum4 = 0
-    # sum5 = 0
-    # for i, batch in enumerate(dataloader):
-    #     # print(i*bs, '/', len(dataset))
-        
-    #     # # motion_spk,
-    #     # #     motion_lsn,
-    #     # #     melspec_spk,
-    #     # #     melspecs_lsn,
-    #     # #     audio_spk,
-    #     # #     audio_lsn,
-    #     # #     text_spk,
-    #     # #     text_lsn,
-    #     # #     active_passive_lsn,
-    #     # #     length,
-    #     # print("motion_spk shape: ", batch[0].shape)
-    #     # print("motion_lsn shape: ", batch[2].shape)
-    #     # print("melspec_spk shape: ", batch[3].shape)
-    #     # print("melspecs_lsn shape: ", batch[4].shape)
-    #     # print("audio_spk shape: ", batch[5].shape)
-    #     # print("audio_lsn shape: ", batch[6].shape)
-    #     # print("text_spk shape: ", batch[7])
-    #     # print("text_lsn shape: ", batch[8])
-    #     # print("active_passive_lsn shape: ", batch[9])
-    #     # print("length: ", len(batch[1]))
-    #     # print("name: ", batch[10])
-
-
-    #     # print("*"*100)
-    #     # break
-    #     apb = batch["active_passive_lsn"]
-    #     sum_ += sum(apb)
-    #     for i in apb:
-    #         if i == 1:
-    #             if batch["text_lsn"][i] == '-':
-    #                 sum2 += 1
-    #             else:
-    #                 sum3 += 1
-
-    #         else:
-    #             if batch["text_lsn"][i] == '-':
-    #                 sum4 += 1
-    #             else:
-    #                 sum5 += 1
-
-
-    # print("samples which have some audio in them \t", sum_, len(dataset), sum_/len(dataset)*100)
-    # print("samples which have some audio in them but no text is transcribed \t", sum2, len(dataset), sum2/len(dataset)*100)
-    # print("samples which have some audio in them but text is transcribed \t", sum3, len(dataset), sum3/len(dataset)*100)
-    # print("samples which have silence in them and no text in them \t", sum4, len(dataset), sum4/len(dataset)*100)
-    # print("samples which have silence in them and text is transcribed there (fault from whisper) \t", sum5, len(dataset), sum5/len(dataset)*100)
-
-
-
-    for sample in dataset:
-        motion_spk = sample[0]
-        m_length = sample[1]
-        motion_lsn  = sample[2]
-        melspec_spk = sample[3]
-        melspec_lsn = sample[4]
-        audio_spk = sample[5]
-        audio_lsn = sample[6]
-        text_spk = sample[7]
-        text_lsn = sample[8]
-        active_passive_lsn = sample[9]
-        name = sample[10]
-        spk_name = sample[11]
-        lsn_name = sample[12]
-        lsn_id = sample[13]

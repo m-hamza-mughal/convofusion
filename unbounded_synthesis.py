@@ -546,8 +546,8 @@ def main():
     cfg.DATASET.SAMPLER.MIN_LEN = 128 * 6
     # breakpoint()
     cfg.model.audio_encoder.params.max_seq_len = 128
-    cfg.DATASET.BEATDND.ROOT = ['/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/','/CT/GroupGesture/work/GestureSynth/ut_data_30sec']
-    cfg.DATASET.BEATDND.SPLIT_ROOT = ['/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/','/CT/GroupGesture/work/GestureSynth/ut_data_30sec']
+    cfg.DATASET.BEATDND.ROOT = ['./datasets/beat_english_v0.2.1/','./datasets/utterance_dataset_30sec']
+    cfg.DATASET.BEATDND.SPLIT_ROOT = ['./datasets/beat_english_v0.2.1/','./datasets/utterance_dataset_30sec']
 
     datasets = get_datasets(cfg, logger=logger, phase="test")[0]
     logger.info("datasets module {} initialized".format("".join(

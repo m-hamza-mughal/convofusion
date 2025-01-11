@@ -362,7 +362,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     result_dir = args.result_dir
 
-    ae_path =  '/CT/mmughal/work/GestureSynth/BEAT/outputs/audio2pose/custom/1106_124514_ae_beatdnd_35english_25_189/last_499.bin'
+    ae_path =  '.experiments/eval/last_499.bin'
     FIDNet = HalfEmbeddingNet(pose_length=128, pose_dim=189, feature_length=300)
     load_fidnet_checkpoints(FIDNet, ae_path, 'HalfEmbeddingNet')
     FIDNet.cuda()

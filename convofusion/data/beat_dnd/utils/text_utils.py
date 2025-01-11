@@ -34,7 +34,7 @@ def parse_textgrid(textgrid_path):
 
 
 if __name__ == "__main__":
-    textgrid_path = "/CT/mmughal/work/GestureSynth/BEAT/datasets/beat_english_v0.2.1/1/1_wayne_0_2_2.TextGrid"
+    textgrid_path = "./datasets/beat_english_v0.2.1/1/1_wayne_0_2_2.TextGrid"
     text_data = parse_textgrid(textgrid_path)
     breakpoint()
     print(text_data)

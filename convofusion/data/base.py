@@ -20,12 +20,7 @@ class BASEDataModule(pl.LightningDataModule):
         # self.collate_fn = collate_fn
         self.persistent_workers = True
         self.is_mm = False
-        # need to be overloaded:
-        # - self.Dataset
-        # - self._sample_set => load only a small subset
-        #   There is an helper bellow (get_sample_set)
-        # - self.nfeats
-        # - self.transforms
+        
         self.split_root = None
 
     def get_sample_set(self, overrides={}):
