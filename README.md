@@ -54,7 +54,7 @@ extract zip file and place both folders in `experiments/convofusion/`
 <br>
 The zip file contains folders for VAE model and the Gesture Diffusion Model.
 
-For evaluation, download FID network [from here]() and place in `experiments/eval`
+For evaluation, download FID network [from here](https://nextcloud.mpi-klsb.mpg.de/index.php/s/QzGiWeoiYpQQZrS) and place in `experiments/eval`
 
 <!-- </details> -->
 
