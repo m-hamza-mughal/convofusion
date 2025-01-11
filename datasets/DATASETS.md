@@ -14,6 +14,8 @@ python scripts/beat_getjoints.py
 ```
 This script also contains joint name list which corresponds to 67 joints (same as the preprocessed DnD dataset - see below)
 
+After that move all .txt files from `beat_splits` directory into download `beat_english_v0.2.1` directory
+
 
 # Splitting DnD Dataset.
 To run the code, you would need to download the processed version (joint positions) for DnD GroupGesture Dataset. 

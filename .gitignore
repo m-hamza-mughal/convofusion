@@ -4,7 +4,10 @@ results/*
 
 experiments/*/*
 
-datasets/*/*
+datasets/DnD_processed_jointpos
+datasets/beat_english_v0.2.1
+
+*.zip
 
 *.out
 
