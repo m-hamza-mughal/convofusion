@@ -123,8 +123,8 @@ def process_session(session_path, output_folder, num_frames=128):
         start_idx = start_motion_frame[os.path.basename(session_path)]
         frame_array = frame_array[start_idx:]
 
-        # Resample motion to 25 fps for joints_28_10_22
-        if os.path.basename(session_path) == "joints_28_10_22":
+        # Resample motion to 25 fps for session_2
+        if os.path.basename(session_path) == "session_2":
             xp = np.arange(0, len(frame_array), 30/25)
 
             if xp[-1] > len(frame_array)-1:
